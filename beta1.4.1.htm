@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html>
+<meta name="viewport"  content="width=device-width,user-scalable=no" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<title> Dash Mail </title>
+
+
+<style TYPE="text/css">
+
+
+	body {
+		background	:	#DDDDDD;
+		font-family	:	Meiryo;
+
+	}
+
+.listex {
+  		text-align	: 	justify;
+  		text-justify	: 	inter-ideograph;
+
+}
+
+
+	div  {
+	background		:	#FFFFFF; 
+	width			:	250px;
+	text-align		:	center;
+	margin			:	30px auto;
+	border-radius		:	5px 5px 5px 5px / 5px 5px 5px 5px;
+
+	}
+
+.button {
+	display			: 	inline-block;
+	background-color	:	#00FF77;
+	width			: 	200px;
+	height			:	40px;
+	border-radius		:	10px 10px 10px 10px / 10px 10px 10px 10px;
+	text-align		:	center;
+	text-decoration		:	blink;
+	line-height		:	45px;
+	outline			:	none;
+}
+
+
+
+.bottombutton {
+	display			: 	inline-block;
+	background-color	:	#666666;
+	text-color		:	#FFFFFF;
+	width			: 	100px;
+	height			:	40px;
+	border-radius		:	5px 5px 5px 5px / 5px 5px 5px 5px;
+	text-align		:	center;
+	text-decoration		:	blink;
+	line-height		:	45px;
+	outline			:	none;
+}
+
+
+
+.bord {
+	display			: 	inline-block;
+	background-color	:	#666666;
+	text-color		:	#FFFFFF;
+	width			: 	250px;
+	height			:	40px;
+	border-radius		:	5px 5px 5px 5px / 5px 5px 5px 5px;
+	text-align		:	center;
+	text-decoration		:	blink;
+	line-height		:	45px;
+	outline			:	none;
+}</style>
+
+
+<head>
+
+<meta charset=sjis>
+
+
+
+<script type="text/javascript">
+
+
+//------Java  Script--------//
+
+
+//==========================================================//
+//
+//【仕様】
+//
+// ==========構成==========
+// HTML5		: Webページ表示
+// JavaScript		: メール本文構成
+// localStorage		: セキュリティ上設定保存をローカルに限定
+// mailto		: 標準メール転送
+// ========================
+//
+// ==========変数==========
+// +++  一時設定(ブラウザを閉じると設定が消える)  +++
+// statid	: 勤怠内容（遅刻/全休/午前半休/午後半休/直行/直帰/直行直帰）
+// staday	: 開始日
+// finday	: 終了日
+// reason	: 事由
+// 
+// +++  恒久設定（端末へ保存するデータ）  +++
+// dept		: 部門
+// inum		: 社員番号
+// name		: 名前
+// dest		: 宛先
+// cest		: cc宛先
+//
+// ====Function(ボタン)====
+// save		: 設定の保存
+// cler		: 設定の消去
+// chkr		: 設定の確認
+// send		: メール送信
+//
+// ======ウィンドウ=======
+// no1		: 設定フォーム
+// no2		: 送信フォーム
+//
+//
+//==========================================================//
+function Display(no){
+
+
+if(no == "no2"){
+	document.getElementById("Setting").style.display = "block";
+	document.getElementById("Sending").style.display = "none";
+	document.getElementById("Options").style.display = "block";
+}else if(no == "no1"){
+	document.getElementById("Setting").style.display = "none";
+	document.getElementById("Sending").style.display = "block";
+	document.getElementById("Options").style.display = "none";
+}
+
+
+//初期化
+format();
+
+//ストレージ読み込み
+readstr();
+
+//データをフォームに投げる
+document.getElementById("dept").value=dept;
+document.getElementById("inum").value=inum;
+document.getElementById("name").value=name;
+document.getElementById("dest").value=dest;
+document.getElementById("cc0a").value=cc0a;
+document.getElementById("cc0b").value=cc0b;
+document.getElementById("cc0c").value=cc0c;
+document.getElementById("type").value=type;
+
+}
+
+
+
+
+
+
+function save(){
+
+dept = document.getElementById("dept").value;
+inum = document.getElementById("inum").value;
+name = document.getElementById("name").value;
+dest = document.getElementById("dest").value;
+cc0a = document.getElementById("cc0a").value;
+cc0b = document.getElementById("cc0b").value;
+cc0c = document.getElementById("cc0c").value;
+type = document.getElementById("type").value;
+
+writestr();
+viewdata();
+}
+
+
+function viewdata(){
+
+//初期化
+format();
+
+//ストレージ読み込み
+readstr();
+
+//ポップアップ表示データ作成
+result = "";
+result += "部門：" + dept + "\n" + "社員番号：" + inum + "\n" + "名前：" + name + "\n" + "送信宛先：" + dest + "\nＣＣ宛先：" + cc0a + "\nＣＣ宛先：" + cc0b + "\nＣＣ宛先：" + cc0c ;
+
+//文春砲
+alert(result);
+}
+
+
+
+
+
+
+function mailgen(){
+//初期化
+format();
+
+//ストレージ読み込み
+readstr();
+
+//設定読み込み
+catset();
+
+//エスケープシーケンス
+esc();
+
+//internal use only
+iou = "Internal%20Use%20Only";
+
+//日付フォーマット
+dayform();
+
+
+//終了日判定
+  if(finday < 0){
+   finday = "";
+}
+
+//区間判定できる場合はハイフンを入れる
+
+ bar = "";
+  if(finday > 0){
+   bar = "-";
+}
+
+
+
+//メール本文
+mailform();
+
+}
+
+
+
+//##########################################################//
+
+
+
+
+function cler(){
+str.clear();
+Display();
+}
+
+
+
+
+
+
+function format(){
+
+//コード短縮
+	str=localStorage;
+
+
+//ストレージに保存する設定領域
+	dept = 0;
+	inum = 0;
+	stat = 0;
+	dest = 0;
+	name = 0;
+	cc0a = 0;
+	cc0b = 0;
+	cc0c = 0;
+	type = 0;
+}
+
+
+
+
+
+
+
+//ストレージをのアイテム読み込む
+function readstr(){
+
+dept = str.getItem(0);
+inum = str.getItem(1);
+stat = str.getItem(2);
+dest = str.getItem(3);
+name = str.getItem(4);
+cc0a = str.getItem(5);
+cc0b = str.getItem(6);
+cc0c = str.getItem(7);
+type = str.getItem(8);
+
+}
+
+
+
+
+
+
+function writestr(){
+str.setItem(0, dept);
+str.setItem(1, inum);
+str.setItem(2, name);
+str.setItem(3, dest);
+str.setItem(4, name);
+str.setItem(5, cc0a);
+str.setItem(6, cc0b);
+str.setItem(7, cc0c);
+str.setItem(8, type);
+
+alert('書き込み完了');
+}
+
+
+
+
+
+
+
+function catset(){
+statid = document.getElementById("statid").value;
+staday = document.getElementById("staday").value;
+finday = document.getElementById("finday").value;
+reason = document.getElementById("reason").value;
+}
+
+
+
+
+
+
+
+function dayform(){
+   var tstaday = staday.replace("-","");
+   staday = tstaday.replace("-","");
+   var tfinday = finday.replace("-","");
+   finday  = tfinday.replace("-","");
+}
+
+
+
+
+
+
+function mailform(){
+    result = "";
+    cc00 = cc0a + type + cc0b + type + cc0c;
+    result +="<a href=mailto:" + dest + "?cc=" + cc00 + "&subject=[勤怠連絡/" + statid + "]" + dept + "_" + name + "_" + staday + bar + finday + "&body=宛先各位%0A%0Dお疲れ様です、" + dept + name + "です。%0A以下勤怠連絡いたします。%0A%0D========%0A■日程　　：" + staday + bar + finday + "%0A■社員番号：" + inum + "%0A■所属　　：" + dept + "%0A■氏名　　：" + name + "%0A■種別　　：" + statid + "%0A■事由　　：" + reason + "%0A========%0A" + iou + "> 適用する <a>";
+
+for (;result.indexOf('null') != -1;) {
+      result = result.replace("null" ,"");
+}
+
+for (;result.indexOf(';') != -1;) {
+      result = result.replace(";" ,"%3b");
+}
+
+for (;result.indexOf(',') != -1;) {
+      result = result.replace("," ,"%2c");
+}
+//上のループで作成されたテキストを表示する
+  　document.getElementById("show_mail").innerHTML = result;
+}
+
+
+
+
+
+
+function esc(){
+// ,(カンマ)
+  statid = statid.replace(",","%2c");
+  staday = staday.replace(",","%2c");
+  finday = finday.replace(",","%2c");
+  reason = reason.replace(",","%2c");
+
+
+// 半角スペース
+   statid = statid.replace(" ","%20");
+   staday = staday.replace(" ","%20");
+   finday = finday.replace(" ","%20");
+   reason = reason.replace(" ","%20");
+
+// 全角スペース
+   dept = dept.replace("　","%e3%80%80");
+   inum = inum.replace("　","%e3%80%80");
+   dest = dest.replace("　","%e3%80%80");
+   statid = statid.replace("　","%e3%80%80");
+   staday = staday.replace("　","%e3%80%80");
+   finday = finday.replace("　","%e3%80%80");
+   reason = reason.replace("　","%e3%80%80");
+
+// " % "
+   dept = dept.replace("%","%25");
+   inum = inum.replace("%","%25");
+   dest = dest.replace("%","%25");
+   statid = statid.replace("%","%25");
+   staday = staday.replace("%","%25");
+   finday = finday.replace("%","%25");
+   reason = reason.replace("%","%25");
+
+// " & "
+
+   dept = dept.replace("&","%26%0d%0a");
+   inum = inum.replace("&","%26%0d%0a");
+   dest = dest.replace("&","%26%0d%0a");
+   statid = statid.replace("&","%26%0d%0a");
+   staday = staday.replace("&","%26%0d%0a");
+   finday = finday.replace("&","%26%0d%0a");
+   reason = reason.replace("&","%26%0d%0a");
+
+
+// " > "
+   dept = dept.replace(">","%3e");
+   inum = inum.replace(">","%3e");
+   dest = dest.replace(">","%3e");
+   statid = statid.replace(">","%3e");
+   staday = staday.replace(">","%3e");
+   finday = finday.replace(">","%3e");
+   reason = reason.replace(">","%3e");
+
+// " < "
+   dept = dept.replace("<","%3c");
+   inum = inum.replace("<","%3c");
+   dest = dest.replace("<","%3c");
+   statid = statid.replace("<","%3c");
+   staday = staday.replace("<","%3c");
+   finday = finday.replace("<","%3c");
+   reason = reason.replace("<","%3c");
+
+// ;
+   statid = statid.replace(";","%3b");
+   staday = staday.replace(";","%3b");
+   finday = finday.replace(";","%3b");
+   reason = reason.replace(";","%3b");
+}
+
+
+
+//##########################################################//
+</script>
+
+
+
+
+
+
+<body>
+
+<div id="Sending" style="display">
+     送信フォーム
+<div >
+	勤怠</a>
+	<select id="statid">
+	<option value="遅刻">		遅刻		</option>
+	<option value="全休">		全休		</option>
+	<option value="午前半休">	午前半休	</option>
+	<option value="午後半休">	午後半休	</option>
+	<option value="直行">		直行		</option>
+	<option value="直帰">		直帰		</option>
+	<option value="直行直帰">	直行/直帰	</option>
+	</select>
+
+<br>
+
+
+開始日
+<input type="date" id="staday"> <br>
+終了日
+<input type="date" id="finday"> <br>
+事由
+<input type="text" id="reason" size="15.5"> <br>
+</div>
+
+<br>
+
+<center>
+<a class="button" onClick="viewdata()">設定確認ω・^)Nya!!</a><br><br>
+<a class="button" onClick="mailgen()">フォームを作成する</a>
+<div type="button" id="show_mail"></button>
+</center>
+<br>
+</div>
+
+
+
+ <div id="Setting" style="display:none";>
+
+
+
+     <a class="bord">:::設定フォーム::: </a>
+:　部門　:
+<input id="dept" type="text"  placeholder="例)XDD-XX"><br>
+:社員番号:
+<input id="inum" type="text"  placeholder="例)01234"><br>
+:　名前　:
+<input id="name" type="text"  placeholder="例)山田太郎"><br>
+:送信宛先:
+<input id="dest" type="text"  placeholder="例)xxx@xxx.com"><br>
+:ＣＣ宛先:<br>
+<input id="cc0a" type="text"  placeholder="例)xxxxx@xxx.com"><br>
+<input id="cc0b" type="text"  placeholder="例)xxxxx@xxx.com"><br>
+<input id="cc0c" type="text"  placeholder="例)xxxxx@xxx.com"><br>
+<br>
+使用機種
+	<select id="type">
+	<option value="%2c">iPhone			</option>
+	<option value="%3b">PC(Outlook)		</option>
+	</select>
+
+<div id="show_result"></div>
+
+
+
+<a class="button"  onClick="save()">設定を保存</a><br><br>
+<a class="button" onClick="viewdata()">設定確認ω・^)Nya!!</a><br><br>
+
+</div>
+<div id="Options" style="display:none";>
+	<a class="button" onClick="cler()">設定を消去</a>
+</div>
+
+
+
+
+<div>
+	<a class="bottombutton"  style="cursor:pointer" onClick="Display('no1');">送信</a>
+	<a class="bottombutton"  style="cursor:pointer" onClick="Display('no2');">設定</a>
+</div>
+</body>
+<center>
+Auto Mailler beta 1.4
+</center>
+</html>
+
